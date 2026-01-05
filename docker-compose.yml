@@ -1,0 +1,99 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgis/postgis:16-3.4-alpine
+    container_name: buildinglens-postgres
+    environment:
+      POSTGRES_DB: buildinglens
+      POSTGRES_USER: buildinglens_user
+      POSTGRES_PASSWORD: buildinglens_pass
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./server/database/migrations:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U buildinglens_user -d buildinglens"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - buildinglens-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: buildinglens-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+    networks:
+      - buildinglens-network
+
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      target: development
+    container_name: buildinglens-backend
+    environment:
+      NODE_ENV: development
+      PORT: 3100
+      HOST: 0.0.0.0
+      DATABASE_URL: postgresql://buildinglens_user:buildinglens_pass@postgres:5432/buildinglens
+      REDIS_URL: redis://redis:6379
+      REDIS_TTL_GEOCODING: 2592000
+      REDIS_TTL_PLACES: 604800
+      REDIS_TTL_IDENTIFY: 3600
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
+      NOMINATIM_BASE_URL: https://nominatim.openstreetmap.org
+      NOMINATIM_EMAIL: ${NOMINATIM_EMAIL:-contact@buildinglens.com}
+      RATE_LIMIT_WINDOW_MS: 60000
+      RATE_LIMIT_MAX_REQUESTS: 10
+      LOG_LEVEL: debug
+      CORS_ORIGIN: "*"
+    volumes:
+      - ./server/src:/app/src:delegated
+      - ./server/nodemon.json:/app/nodemon.json:ro
+      - ./server/tsconfig.json:/app/tsconfig.json:ro
+      - backend_node_modules:/app/node_modules
+    ports:
+      - "3100:3100"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3100/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - buildinglens-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  backend_node_modules:
+    driver: local
+
+networks:
+  buildinglens-network:
+    driver: bridge

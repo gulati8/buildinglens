@@ -1,0 +1,53 @@
+{
+  "expo": {
+    "name": "BuildingLens",
+    "slug": "buildinglens",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0EA5E9"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.buildinglens.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "BuildingLens uses your camera to identify buildings.",
+        "NSLocationWhenInUseUsageDescription": "BuildingLens uses your location to identify nearby buildings.",
+        "NSLocationAlwaysUsageDescription": "BuildingLens uses your location to identify nearby buildings."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0EA5E9"
+      },
+      "package": "com.buildinglens.app",
+      "permissions": [
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "BuildingLens uses your camera to identify buildings."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "BuildingLens uses your location to identify nearby buildings."
+        }
+      ]
+    ]
+  }
+}
