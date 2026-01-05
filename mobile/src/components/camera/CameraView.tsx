@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
-import { Camera, CameraType } from 'expo-camera';
+import { CameraView as ExpoCamera } from 'expo-camera';
 import { colors, typography, spacing } from '../../theme';
 
 export interface CameraViewProps {
@@ -22,14 +22,14 @@ export function CameraView({ onCameraReady, children }: CameraViewProps) {
 
   return (
     <View style={styles.container}>
-      <Camera
+      <ExpoCamera
         style={styles.camera}
-        type={CameraType.back}
+        facing="back"
         onCameraReady={handleCameraReady}
       >
         {/* Overlay children */}
         {isCameraReady && children}
-      </Camera>
+      </ExpoCamera>
 
       {/* Loading state */}
       {!isCameraReady && (
